@@ -312,15 +312,17 @@ function doLogin() {
 })();
 
 // ===== LOGOUT =====
-function logout() {
-  sessionStorage.removeItem('user');
-  currentUser = null;
-  appDiv.style.display = 'none';
-  loginBox.style.display = 'block';
-  username.value = '';
-  password.value = '';
-  loginMsg.innerText = '';
-}
+window.logout = () => {
+  if (confirm('Apakah Anda yakin ingin logout?')) {
+    sessionStorage.removeItem('user');
+    currentUser = null;
+    appDiv.style.display = 'none';
+    loginBox.style.display = 'block';
+    username.value = '';
+    password.value = '';
+    loginMsg.innerText = '';
+  }
+};
 
 // ===== MASTER DATA (localStorage) =====
 function loadMaster() {
