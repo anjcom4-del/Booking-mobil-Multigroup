@@ -257,6 +257,8 @@ const togglePass = document.getElementById('togglePass');
 const loginBtn = document.getElementById('loginBtn');
 
 let currentUser = null;
+let masterDivisi = JSON.parse(localStorage.getItem('divisi') || '[]');
+let masterMobil = JSON.parse(localStorage.getItem('mobil') || '[]');
 let bookings = [];
 
 // ===== LOGIN =====
@@ -287,6 +289,7 @@ function doLogin() {
     document.getElementById('adminPanel').style.display = 'none';
   } else {
     document.getElementById('adminPanel').style.display = 'block';
+    loadMaster();
   }
   render();
 }
@@ -303,6 +306,7 @@ function doLogin() {
     document.getElementById('adminPanel').style.display = 'none';
   } else {
     document.getElementById('adminPanel').style.display = 'block';
+    loadMaster();
   }
   render();
 })();
@@ -318,40 +322,44 @@ function logout() {
   loginMsg.innerText = '';
 }
 
-// ===== MASTER DATA =====
-onSnapshot(collection(db, "divisi"), s => {
-  divisi.innerHTML = '<option value="">Pilih Divisi</option>';
-  listDivisi.innerHTML = '';
-  s.forEach(d => {
-    divisi.innerHTML += `<option value="${d.data().nama}">${d.data().nama}</option>`;
-    listDivisi.innerHTML += `<li>${d.data().nama}</li>`;
-  });
-});
+// ===== MASTER DATA (localStorage) =====
+function loadMaster() {
+  const listDivisi = document.getElementById('listDivisi');
+  const listMobil = document.getElementById('listMobil');
+  listDivisi.innerHTML = masterDivisi.map(d => `<li>${d}</li>`).join('');
+  listMobil.innerHTML = masterMobil.map(m => `<li>${m}</li>`).join('');
+}
 
-onSnapshot(collection(db, "mobil"), s => {
-  mobil.innerHTML = '<option value="">Pilih Mobil</option>';
-  listMobil.innerHTML = '';
-  s.forEach(d => {
-    mobil.innerHTML += `<option value="${d.data().nama}">${d.data().nama}</option>`;
-    listMobil.innerHTML += `<li>${d.data().nama}</li>`;
-  });
-});
-
-window.addDivisi = async () => {
+window.addDivisi = () => {
   const val = divisiBaru.value.trim();
-  if (!val) return;
-  await addDoc(collection(db, "divisi"), {nama: val});
+  if (!val || masterDivisi.includes(val)) return;
+  masterDivisi.push(val);
+  localStorage.setItem('divisi', JSON.stringify(masterDivisi));
   divisiBaru.value = '';
+  loadMaster();
+  render();
 };
 
-window.addMobil = async () => {
+window.addMobil = () => {
   const val = mobilBaru.value.trim();
-  if (!val) return;
-  await addDoc(collection(db, "mobil"), {nama: val});
+  if (!val || masterMobil.includes(val)) return;
+  masterMobil.push(val);
+  localStorage.setItem('mobil', JSON.stringify(masterMobil));
   mobilBaru.value = '';
+  loadMaster();
+  render();
 };
 
-// ===== BOOKING =====
+// ===== FORM FUNCTIONS =====
+function render() {
+  const divisiSel = document.getElementById('divisi');
+  const mobilSel = document.getElementById('mobil');
+  divisiSel.innerHTML = '<option value="">Pilih Divisi</option>' + masterDivisi.map(d => `<option value="${d}">${d}</option>`).join('');
+  mobilSel.innerHTML = '<option value="">Pilih Mobil</option>' + masterMobil.map(m => `<option value="${m}">${m}</option>`).join('');
+  // Bookings akan diupdate oleh onSnapshot
+}
+
+// ===== BOOKING (Firestore realtime) =====
 onSnapshot(collection(db, "bookings"), s => {
   bookings = [];
   tbody.innerHTML = '';
