@@ -1,0 +1,395 @@
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAR REQUEST FORM</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',Arial;background:#f2f4f8;min-height:100vh}
+.login-box{max-width:380px;margin:120px auto;background:#fff;padding:30px;border-radius:18px;box-shadow:0 15px 35px rgba(0,0,0,.25)}
+.login-box h2{text-align:center;margin-bottom:20px}
+label{font-weight:600}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-bottom:12px}
+textarea{resize:vertical}
+.btn{padding:10px 18px;border:none;border-radius:20px;cursor:pointer;font-weight:600}
+.btn-primary{background:#1d2671;color:#fff}
+.btn-danger{background:#dc3545;color:#fff}
+.btn-success{background:#28a745;color:#fff}
+.password-wrap{display:flex;gap:6px}
+#togglePass{border:none;background:#eee;border-radius:8px;padding:0 12px;cursor:pointer}
+header{background:#0f2027;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+header img{height:46px}
+main{max-width:1200px;margin:auto;padding:30px}
+.card{background:#fff;border-radius:22px;padding:26px;margin-bottom:26px;box-shadow:0 12px 30px rgba(0,0,0,.12)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+ul{padding-left:18px}
+li{font-size:14px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
+th{background:#203a43;color:#fff}
+@media(max-width:600px){header h2{font-size:16px}}
+
+/* Penambahan untuk tampilan form booking yang lebih menarik */
+.booking-form .form-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+.booking-form .form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333;
+}
+.booking-form .form-group input,
+.booking-form .form-group select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #f9f9f9;
+}
+.booking-form .form-group input:focus,
+.booking-form .form-group select:focus {
+  border-color: #1d2671;
+  box-shadow: 0 0 10px rgba(29, 38, 113, 0.2);
+  background: #fff;
+}
+.booking-form .form-group textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 16px;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.3s ease;
+  background: #f9f9f9;
+}
+.booking-form .form-group textarea:focus {
+  border-color: #1d2671;
+  box-shadow: 0 0 10px rgba(29, 38, 113, 0.2);
+  background: #fff;
+}
+.booking-form .btn-success {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: #fff;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  border: none;
+}
+.booking-form .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+.booking-form .icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ccc;
+  font-size: 18px;
+}
+.booking-form h3 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #1d2671;
+  font-size: 24px;
+  font-weight: 700;
+}
+.booking-form #msg {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginBox" class="login-box">
+  <h2>Login Sistem</h2>
+  <label>Username</label>
+  <input id="username" placeholder="admin / user">
+  <label>Password</label>
+  <div class="password-wrap">
+    <input id="password" type="password">
+    <button id="togglePass" type="button">👁</button>
+  </div>
+  <button id="loginBtn" class="btn btn-primary" style="width:100%">Login</button>
+  <p id="loginMsg" style="color:red"></p>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+<header>
+  <img src="logo-multi-group.jpg" alt="Logo">
+  <h2>🚗 CAR REQUEST FORM</h2>
+  <div>
+    <span id="roleInfo"></span>
+    <button class="btn btn-danger" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<main>
+  <!-- ADMIN MASTER DATA -->
+  <div class="card" id="adminPanel" style="display:none">
+    <h3>Master Data (Admin)</h3>
+    <div class="grid">
+      <div>
+        <label>Tambah Divisi</label>
+        <input id="divisiBaru" placeholder="Nama Divisi">
+        <button class="btn btn-success" onclick="addDivisi()">Tambah</button>
+        <ul id="listDivisi"></ul>
+      </div>
+      <div>
+        <label>Tambah Mobil</label>
+        <input id="mobilBaru" placeholder="Nama Mobil">
+        <button class="btn btn-success" onclick="addMobil()">Tambah</button>
+        <ul id="listMobil"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM BOOKING -->
+  <div class="card booking-form">
+    <h3>🚗 Form Booking Mobil</h3>
+    <div class="grid">
+      <div class="form-group">
+        <label for="nama">👤 Nama Pemesan</label>
+        <input id="nama" placeholder="Masukkan nama lengkap">
+        <span class="icon">✏️</span>
+      </div>
+      <div class="form-group">
+        <label for="kode">🔢 Kode Booking</label>
+        <input id="kode" placeholder="Masukkan kode unik">
+        <span class="icon">🔑</span>
+      </div>
+      <div class="form-group">
+        <label for="divisi">🏢 Divisi</label>
+        <select id="divisi">
+          <option value="">Pilih Divisi</option>
+        </select>
+        <span class="icon">📂</span>
+      </div>
+      <div class="form-group">
+        <label for="mobil">🚙 Mobil</label>
+        <select id="mobil">
+          <option value="">Pilih Mobil</option>
+        </select>
+        <span class="icon">🚗</span>
+      </div>
+      <div class="form-group">
+        <label for="tglBooking">📅 Tanggal Booking</label>
+        <input type="date" id="tglBooking">
+        <span class="icon">📆</span>
+      </div>
+      <div class="form-group">
+        <label for="tglPakai">📅 Tanggal Pakai</label>
+        <input type="date" id="tglPakai">
+        <span class="icon">📆</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="tujuan">🎯 Tujuan</label>
+      <textarea id="tujuan" placeholder="Jelaskan tujuan penggunaan mobil..."></textarea>
+      <span class="icon">📝</span>
+    </div>
+    <button class="btn btn-success" onclick="simpan()">Simpan Booking</button>
+    <p id="msg"></p>
+  </div>
+
+  <!-- DATA -->
+  <div class="card">
+    <h3>Data Booking</h3>
+    <button id="exportBtn" class="btn btn-primary" onclick="exportExcel()">Export Excel</button>
+    <table id="table">
+      <thead>
+        <tr>
+          <th>Nama</th><th>Kode</th><th>Divisi</th><th>Mobil</th>
+          <th>Tgl Booking</th><th>Tgl Pakai</th><th>Tujuan</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</main>
+</div>
+
+<script>
+// ===== KONFIG =====
+const users = [{u:'admin', p:'admin135', r:'Admin'}, {u:'user', p:'user135', r:'User'}];
+
+// ===== ELEMENT =====
+const loginBox = document.getElementById('loginBox');
+const app = document.getElementById('app');
+const roleInfo = document.getElementById('roleInfo');
+const exportBtn = document.getElementById('exportBtn');
+const username = document.getElementById('username');
+const password = document.getElementById('password');
+const loginMsg = document.getElementById('loginMsg');
+const msg = document.getElementById('msg');
+const togglePass = document.getElementById('togglePass');
+const loginBtn = document.getElementById('loginBtn');
+
+let currentUser = null;
+let masterDivisi = JSON.parse(localStorage.getItem('divisi') || '[]');
+let masterMobil = JSON.parse(localStorage.getItem('mobil') || '[]');
+let bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+
+// ===== LOGIN =====
+togglePass.onclick = () => {
+  password.type = password.type === 'password' ? 'text' : 'password';
+};
+loginBtn.onclick = doLogin;
+
+// Tambahkan event listener untuk Enter pada username dan password
+username.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+password.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogin() {
+  const u = username.value.trim().toLowerCase();
+  const p = password.value.trim();
+  const f = users.find(x => x.u === u && x.p === p);
+  if (!f) { loginMsg.innerText = 'Login gagal'; return; }
+  currentUser = f;
+  sessionStorage.setItem('user', JSON.stringify(f));
+  loginBox.style.display = 'none';
+  app.style.display = 'block';
+  roleInfo.innerText = 'Role: ' + f.r;
+  if (f.r !== 'Admin') {
+    exportBtn.style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'none'; // Pastikan master data admin disembunyikan untuk user
+  } else {
+    document.getElementById('adminPanel').style.display = 'block';
+    loadMaster();
+  }
+  render();
+}
+
+(function autoLogin() {
+  const s = sessionStorage.getItem('user');
+  if (!s) return;
+  currentUser = JSON.parse(s);
+  loginBox.style.display = 'none';
+  app.style.display = 'block';
+  roleInfo.innerText = 'Role: ' + currentUser.r;
+  if (currentUser.r !== 'Admin') {
+    exportBtn.style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'none'; // Pastikan master data admin disembunyikan untuk user
+  } else {
+    document.getElementById('adminPanel').style.display = 'block';
+    loadMaster();
+  }
+  render();
+})();
+
+// ===== LOGOUT =====
+function logout() {
+  sessionStorage.removeItem('user');
+  currentUser = null;
+  app.style.display = 'none';
+  loginBox.style.display = 'block';
+  username.value = '';
+  password.value = '';
+  loginMsg.innerText = '';
+}
+
+// ===== ADMIN FUNCTIONS =====
+function addDivisi() {
+  const val = document.getElementById('divisiBaru').value.trim();
+  if (!val) return;
+  if (masterDivisi.includes(val)) return;
+  masterDivisi.push(val);
+  localStorage.setItem('divisi', JSON.stringify(masterDivisi));
+  document.getElementById('divisiBaru').value = '';
+  loadMaster();
+  render();
+}
+
+function addMobil() {
+  const val = document.getElementById('mobilBaru').value.trim();
+  if (!val) return;
+  if (masterMobil.includes(val)) return;
+  masterMobil.push(val);
+  localStorage.setItem('mobil', JSON.stringify(masterMobil));
+  document.getElementById('mobilBaru').value = '';
+  loadMaster();
+  render();
+}
+
+function loadMaster() {
+  const listDivisi = document.getElementById('listDivisi');
+  const listMobil = document.getElementById('listMobil');
+  listDivisi.innerHTML = masterDivisi.map(d => `<li>${d}</li>`).join('');
+  listMobil.innerHTML = masterMobil.map(m => `<li>${m}</li>`).join('');
+}
+
+// ===== FORM FUNCTIONS =====
+function render() {
+  const divisiSel = document.getElementById('divisi');
+  const mobilSel = document.getElementById('mobil');
+  divisiSel.innerHTML = '<option value="">Pilih Divisi</option>' + masterDivisi.map(d => `<option value="${d}">${d}</option>`).join('');
+  mobilSel.innerHTML = '<option value="">Pilih Mobil</option>' + masterMobil.map(m => `<option value="${m}">${m}</option>`).join('');
+  const tbody = document.querySelector('#table tbody');
+  tbody.innerHTML = bookings.map(b => `
+    <tr>
+      <td>${b.nama}</td>
+      <td>${b.kode}</td>
+      <td>${b.divisi}</td>
+      <td>${b.mobil}</td>
+      <td>${b.tglBooking}</td>
+      <td>${b.tglPakai}</td>
+      <td>${b.tujuan}</td>
+    </tr>
+  `).join('');
+}
+
+function simpan() {
+  const nama = document.getElementById('nama').value.trim();
+  const kode = document.getElementById('kode').value.trim();
+  const divisi = document.getElementById('divisi').value;
+  const mobil = document.getElementById('mobil').value;
+  const tglBooking = document.getElementById('tglBooking').value;
+  const tglPakai = document.getElementById('tglPakai').value;
+  const tujuan = document.getElementById('tujuan').value.trim();
+  if (!nama || !kode || !divisi || !mobil || !tglBooking || !tglPakai || !tujuan) {
+    msg.innerText = 'Semua field harus diisi!';
+    return;
+  }
+  bookings.push({nama, kode, divisi, mobil, tglBooking, tglPakai, tujuan});
+  localStorage.setItem('bookings', JSON.stringify(bookings));
+  document.getElementById('nama').value = '';
+  document.getElementById('kode').value = '';
+  document.getElementById('divisi').selectedIndex = 0;
+  document.getElementById('mobil').selectedIndex = 0;
+  document.getElementById('tglBooking').value = '';
+  document.getElementById('tglPakai').value = '';
+  document.getElementById('tujuan').value = '';
+  msg.innerText = 'Booking berhasil disimpan!';
+  render();
+}
+
+// ===== EXPORT =====
+function exportExcel() {
+  if (currentUser.r !== 'Admin') return;
+  const ws = XLSX.utils.json_to_sheet(bookings);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+  XLSX.writeFile(wb, 'bookings.xlsx');
+}
+</script>
+</body>
+</html>
+
