@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -223,13 +224,29 @@ th{background:#203a43;color:#fff}
 </main>
 </div>
 
-<script>
+<script type="module">
+// ===== FIREBASE CONFIG =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDkLSbuXI_XoQS_s4b0uvT_WfkLgRcQ058",
+  authDomain: "booking-mobil-multigroup.firebaseapp.com",
+  projectId: "booking-mobil-multigroup",
+  storageBucket: "booking-mobil-multigroup.firebasestorage.app",
+  messagingSenderId: "672379120256",
+  appId: "1:672379120256:web:8b22dd01247cc6beaa5465"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 // ===== KONFIG =====
 const users = [{u:'admin', p:'admin135', r:'Admin'}, {u:'user', p:'user135', r:'User'}];
 
 // ===== ELEMENT =====
 const loginBox = document.getElementById('loginBox');
-const app = document.getElementById('app');
+const appDiv = document.getElementById('app');
 const roleInfo = document.getElementById('roleInfo');
 const exportBtn = document.getElementById('exportBtn');
 const username = document.getElementById('username');
@@ -240,9 +257,7 @@ const togglePass = document.getElementById('togglePass');
 const loginBtn = document.getElementById('loginBtn');
 
 let currentUser = null;
-let masterDivisi = JSON.parse(localStorage.getItem('divisi') || '[]');
-let masterMobil = JSON.parse(localStorage.getItem('mobil') || '[]');
-let bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+let bookings = [];
 
 // ===== LOGIN =====
 togglePass.onclick = () => {
@@ -250,7 +265,6 @@ togglePass.onclick = () => {
 };
 loginBtn.onclick = doLogin;
 
-// Tambahkan event listener untuk Enter pada username dan password
 username.addEventListener('keypress', function(e) {
   if (e.key === 'Enter') doLogin();
 });
@@ -266,14 +280,13 @@ function doLogin() {
   currentUser = f;
   sessionStorage.setItem('user', JSON.stringify(f));
   loginBox.style.display = 'none';
-  app.style.display = 'block';
+  appDiv.style.display = 'block';
   roleInfo.innerText = 'Role: ' + f.r;
   if (f.r !== 'Admin') {
     exportBtn.style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'none'; // Pastikan master data admin disembunyikan untuk user
+    document.getElementById('adminPanel').style.display = 'none';
   } else {
     document.getElementById('adminPanel').style.display = 'block';
-    loadMaster();
   }
   render();
 }
@@ -283,14 +296,13 @@ function doLogin() {
   if (!s) return;
   currentUser = JSON.parse(s);
   loginBox.style.display = 'none';
-  app.style.display = 'block';
+  appDiv.style.display = 'block';
   roleInfo.innerText = 'Role: ' + currentUser.r;
   if (currentUser.r !== 'Admin') {
     exportBtn.style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'none'; // Pastikan master data admin disembunyikan untuk user
+    document.getElementById('adminPanel').style.display = 'none';
   } else {
     document.getElementById('adminPanel').style.display = 'block';
-    loadMaster();
   }
   render();
 })();
@@ -299,97 +311,101 @@ function doLogin() {
 function logout() {
   sessionStorage.removeItem('user');
   currentUser = null;
-  app.style.display = 'none';
+  appDiv.style.display = 'none';
   loginBox.style.display = 'block';
   username.value = '';
   password.value = '';
   loginMsg.innerText = '';
 }
 
-// ===== ADMIN FUNCTIONS =====
-function addDivisi() {
-  const val = document.getElementById('divisiBaru').value.trim();
+// ===== MASTER DATA =====
+onSnapshot(collection(db, "divisi"), s => {
+  divisi.innerHTML = '<option value="">Pilih Divisi</option>';
+  listDivisi.innerHTML = '';
+  s.forEach(d => {
+    divisi.innerHTML += `<option value="${d.data().nama}">${d.data().nama}</option>`;
+    listDivisi.innerHTML += `<li>${d.data().nama}</li>`;
+  });
+});
+
+onSnapshot(collection(db, "mobil"), s => {
+  mobil.innerHTML = '<option value="">Pilih Mobil</option>';
+  listMobil.innerHTML = '';
+  s.forEach(d => {
+    mobil.innerHTML += `<option value="${d.data().nama}">${d.data().nama}</option>`;
+    listMobil.innerHTML += `<li>${d.data().nama}</li>`;
+  });
+});
+
+window.addDivisi = async () => {
+  const val = divisiBaru.value.trim();
   if (!val) return;
-  if (masterDivisi.includes(val)) return;
-  masterDivisi.push(val);
-  localStorage.setItem('divisi', JSON.stringify(masterDivisi));
-  document.getElementById('divisiBaru').value = '';
-  loadMaster();
-  render();
-}
+  await addDoc(collection(db, "divisi"), {nama: val});
+  divisiBaru.value = '';
+};
 
-function addMobil() {
-  const val = document.getElementById('mobilBaru').value.trim();
+window.addMobil = async () => {
+  const val = mobilBaru.value.trim();
   if (!val) return;
-  if (masterMobil.includes(val)) return;
-  masterMobil.push(val);
-  localStorage.setItem('mobil', JSON.stringify(masterMobil));
-  document.getElementById('mobilBaru').value = '';
-  loadMaster();
-  render();
-}
+  await addDoc(collection(db, "mobil"), {nama: val});
+  mobilBaru.value = '';
+};
 
-function loadMaster() {
-  const listDivisi = document.getElementById('listDivisi');
-  const listMobil = document.getElementById('listMobil');
-  listDivisi.innerHTML = masterDivisi.map(d => `<li>${d}</li>`).join('');
-  listMobil.innerHTML = masterMobil.map(m => `<li>${m}</li>`).join('');
-}
+// ===== BOOKING =====
+onSnapshot(collection(db, "bookings"), s => {
+  bookings = [];
+  tbody.innerHTML = '';
+  s.forEach(d => {
+    const data = d.data();
+    bookings.push(data);
+    tbody.innerHTML += `<tr>
+      <td>${data.nama}</td>
+      <td>${data.kode}</td>
+      <td>${data.divisi}</td>
+      <td>${data.mobil}</td>
+      <td>${data.tglBooking}</td>
+      <td>${data.tglPakai}</td>
+      <td>${data.tujuan}</td>
+    </tr>`;
+  });
+});
 
-// ===== FORM FUNCTIONS =====
-function render() {
-  const divisiSel = document.getElementById('divisi');
-  const mobilSel = document.getElementById('mobil');
-  divisiSel.innerHTML = '<option value="">Pilih Divisi</option>' + masterDivisi.map(d => `<option value="${d}">${d}</option>`).join('');
-  mobilSel.innerHTML = '<option value="">Pilih Mobil</option>' + masterMobil.map(m => `<option value="${m}">${m}</option>`).join('');
-  const tbody = document.querySelector('#table tbody');
-  tbody.innerHTML = bookings.map(b => `
-    <tr>
-      <td>${b.nama}</td>
-      <td>${b.kode}</td>
-      <td>${b.divisi}</td>
-      <td>${b.mobil}</td>
-      <td>${b.tglBooking}</td>
-      <td>${b.tglPakai}</td>
-      <td>${b.tujuan}</td>
-    </tr>
-  `).join('');
-}
-
-function simpan() {
-  const nama = document.getElementById('nama').value.trim();
-  const kode = document.getElementById('kode').value.trim();
-  const divisi = document.getElementById('divisi').value;
-  const mobil = document.getElementById('mobil').value;
-  const tglBooking = document.getElementById('tglBooking').value;
-  const tglPakai = document.getElementById('tglPakai').value;
-  const tujuan = document.getElementById('tujuan').value.trim();
+window.simpan = async () => {
+  const nama = nama.value.trim();
+  const kode = kode.value.trim();
+  const divisi = divisi.value;
+  const mobil = mobil.value;
+  const tglBooking = tglBooking.value;
+  const tglPakai = tglPakai.value;
+  const tujuan = tujuan.value.trim();
   if (!nama || !kode || !divisi || !mobil || !tglBooking || !tglPakai || !tujuan) {
     msg.innerText = 'Semua field harus diisi!';
     return;
   }
-  bookings.push({nama, kode, divisi, mobil, tglBooking, tglPakai, tujuan});
-  localStorage.setItem('bookings', JSON.stringify(bookings));
-  document.getElementById('nama').value = '';
-  document.getElementById('kode').value = '';
-  document.getElementById('divisi').selectedIndex = 0;
-  document.getElementById('mobil').selectedIndex = 0;
-  document.getElementById('tglBooking').value = '';
-  document.getElementById('tglPakai').value = '';
-  document.getElementById('tujuan').value = '';
+  await addDoc(collection(db, "bookings"), {nama, kode, divisi, mobil, tglBooking, tglPakai, tujuan});
   msg.innerText = 'Booking berhasil disimpan!';
-  render();
-}
+  // Reset form
+  nama.value = '';
+  kode.value = '';
+  divisi.selectedIndex = 0;
+  mobil.selectedIndex = 0;
+  tglBooking.value = '';
+  tglPakai.value = '';
+  tujuan.value = '';
+};
 
 // ===== EXPORT =====
-function exportExcel() {
+window.exportExcel = () => {
   if (currentUser.r !== 'Admin') return;
+  if (bookings.length === 0) {
+    alert('Tidak ada data untuk diekspor');
+    return;
+  }
   const ws = XLSX.utils.json_to_sheet(bookings);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
   XLSX.writeFile(wb, 'bookings.xlsx');
-}
+};
 </script>
 </body>
 </html>
-
