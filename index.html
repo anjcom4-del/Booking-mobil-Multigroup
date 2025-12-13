@@ -110,6 +110,16 @@ th{background:#203a43;color:#fff}
   margin-top: 15px;
   font-weight: 600;
 }
+
+/* Animasi kedip untuk notifikasi */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.blink {
+  animation: blink 1s infinite;
+}
 </style>
 </head>
 <body>
@@ -210,7 +220,7 @@ th{background:#203a43;color:#fff}
   <!-- DATA -->
   <div class="card">
     <h3>Data Booking</h3>
-    <button id="exportBtn" class="btn btn-primary" onclick="exportExcel()">Export Excel</button>
+    <button id="exportBtn" class="btn btn-primary" onclick="exportExcel()">📊 Export to Excel</button>
     <table id="table">
       <thead>
         <tr>
@@ -224,23 +234,7 @@ th{background:#203a43;color:#fff}
 </main>
 </div>
 
-<script type="module">
-// ===== FIREBASE CONFIG =====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDkLSbuXI_XoQS_s4b0uvT_WfkLgRcQ058",
-  authDomain: "booking-mobil-multigroup.firebaseapp.com",
-  projectId: "booking-mobil-multigroup",
-  storageBucket: "booking-mobil-multigroup.firebasestorage.app",
-  messagingSenderId: "672379120256",
-  appId: "1:672379120256:web:8b22dd01247cc6beaa5465"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
+<script>
 // ===== KONFIG =====
 const users = [{u:'admin', p:'admin135', r:'Admin'}, {u:'user', p:'user135', r:'User'}];
 
@@ -256,10 +250,28 @@ const msg = document.getElementById('msg');
 const togglePass = document.getElementById('togglePass');
 const loginBtn = document.getElementById('loginBtn');
 
+// Elemen form booking
+const nama = document.getElementById('nama');
+const kode = document.getElementById('kode');
+const divisi = document.getElementById('divisi');
+const mobil = document.getElementById('mobil');
+const tglBooking = document.getElementById('tglBooking');
+const tglPakai = document.getElementById('tglPakai');
+const tujuan = document.getElementById('tujuan');
+
+// Elemen master data
+const divisiBaru = document.getElementById('divisiBaru');
+const mobilBaru = document.getElementById('mobilBaru');
+const listDivisi = document.getElementById('listDivisi');
+const listMobil = document.getElementById('listMobil');
+
+// Elemen table
+const tbody = document.querySelector('#table tbody');
+
 let currentUser = null;
 let masterDivisi = JSON.parse(localStorage.getItem('divisi') || '[]');
 let masterMobil = JSON.parse(localStorage.getItem('mobil') || '[]');
-let bookings = [];
+let bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
 
 // ===== LOGIN =====
 togglePass.onclick = () => {
@@ -326,8 +338,6 @@ window.logout = () => {
 
 // ===== MASTER DATA (localStorage) =====
 function loadMaster() {
-  const listDivisi = document.getElementById('listDivisi');
-  const listMobil = document.getElementById('listMobil');
   listDivisi.innerHTML = masterDivisi.map(d => `<li>${d}</li>`).join('');
   listMobil.innerHTML = masterMobil.map(m => `<li>${m}</li>`).join('');
 }
@@ -353,47 +363,56 @@ window.addMobil = () => {
 };
 
 // ===== FORM FUNCTIONS =====
-function render() {
-  const divisiSel = document.getElementById('divisi');
-  const mobilSel = document.getElementById('mobil');
-  divisiSel.innerHTML = '<option value="">Pilih Divisi</option>' + masterDivisi.map(d => `<option value="${d}">${d}</option>`).join('');
-  mobilSel.innerHTML = '<option value="">Pilih Mobil</option>' + masterMobil.map(m => `<option value="${m}">${m}</option>`).join('');
-  // Bookings akan diupdate oleh onSnapshot
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  return `${day}-${month}-${year}`;
 }
 
-// ===== BOOKING (Firestore realtime) =====
-onSnapshot(collection(db, "bookings"), s => {
-  bookings = [];
-  tbody.innerHTML = '';
-  s.forEach(d => {
-    const data = d.data();
-    bookings.push(data);
-    tbody.innerHTML += `<tr>
-      <td>${data.nama}</td>
-      <td>${data.kode}</td>
-      <td>${data.divisi}</td>
-      <td>${data.mobil}</td>
-      <td>${data.tglBooking}</td>
-      <td>${data.tglPakai}</td>
-      <td>${data.tujuan}</td>
-    </tr>`;
-  });
-});
+function render() {
+  divisi.innerHTML = '<option value="">Pilih Divisi</option>' + masterDivisi.map(d => `<option value="${d}">${d}</option>`).join('');
+  mobil.innerHTML = '<option value="">Pilih Mobil</option>' + masterMobil.map(m => `<option value="${m}">${m}</option>`).join('');
+  tbody.innerHTML = bookings.map(b => `
+    <tr>
+      <td>${b.nama}</td>
+      <td>${b.kode}</td>
+      <td>${b.divisi}</td>
+      <td>${b.mobil}</td>
+      <td>${formatDate(b.tglBooking)}</td>
+      <td>${formatDate(b.tglPakai)}</td>
+      <td>${b.tujuan}</td>
+    </tr>
+  `).join('');
+}
 
-window.simpan = async () => {
-  const nama = nama.value.trim();
-  const kode = kode.value.trim();
-  const divisi = divisi.value;
-  const mobil = mobil.value;
-  const tglBooking = tglBooking.value;
-  const tglPakai = tglPakai.value;
-  const tujuan = tujuan.value.trim();
-  if (!nama || !kode || !divisi || !mobil || !tglBooking || !tglPakai || !tujuan) {
+// ===== BOOKING (localStorage) =====
+window.simpan = () => {
+  const namaVal = nama.value.trim();
+  const kodeVal = kode.value.trim();
+  const divisiVal = divisi.value;
+  const mobilVal = mobil.value;
+  const tglBookingVal = tglBooking.value;
+  const tglPakaiVal = tglPakai.value;
+  const tujuanVal = tujuan.value.trim();
+  if (!namaVal || !kodeVal || !divisiVal || !mobilVal || !tglBookingVal || !tglPakaiVal || !tujuanVal) {
     msg.innerText = 'Semua field harus diisi!';
+    msg.style.color = 'red';
+    msg.classList.add('blink');
     return;
   }
-  await addDoc(collection(db, "bookings"), {nama, kode, divisi, mobil, tglBooking, tglPakai, tujuan});
+  // Cek konflik: mobil dan tglPakai sama
+  const conflict = bookings.find(b => b.mobil === mobilVal && b.tglPakai === tglPakaiVal);
+  if (conflict) {
+    msg.innerText = `Mobil pada tanggal ${formatDate(tglPakaiVal)} telah di booking!`;
+    msg.style.color = 'red';
+    msg.classList.add('blink');
+    return;
+  }
+  bookings.push({nama: namaVal, kode: kodeVal, divisi: divisiVal, mobil: mobilVal, tglBooking: tglBookingVal, tglPakai: tglPakaiVal, tujuan: tujuanVal});
+  localStorage.setItem('bookings', JSON.stringify(bookings));
   msg.innerText = 'Booking berhasil disimpan!';
+  msg.style.color = 'green';
+  msg.classList.remove('blink');
   // Reset form
   nama.value = '';
   kode.value = '';
@@ -402,6 +421,7 @@ window.simpan = async () => {
   tglBooking.value = '';
   tglPakai.value = '';
   tujuan.value = '';
+  render();
 };
 
 // ===== EXPORT =====
@@ -411,7 +431,16 @@ window.exportExcel = () => {
     alert('Tidak ada data untuk diekspor');
     return;
   }
-  const ws = XLSX.utils.json_to_sheet(bookings);
+  const dataForExport = bookings.map(b => ({
+    Nama: b.nama,
+    Kode: b.kode,
+    Divisi: b.divisi,
+    Mobil: b.mobil,
+    'Tgl Booking': formatDate(b.tglBooking),
+    'Tgl Pakai': formatDate(b.tglPakai),
+    Tujuan: b.tujuan
+  }));
+  const ws = XLSX.utils.json_to_sheet(dataForExport);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
   XLSX.writeFile(wb, 'bookings.xlsx');
