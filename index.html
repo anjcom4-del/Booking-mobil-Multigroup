@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CAR REQUEST FORM</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<title>CAR REQUEST FORM – Firebase Realtime</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:'Segoe UI',Arial;background:#f2f4f8;min-height:100vh}
@@ -20,106 +19,11 @@ textarea{resize:vertical}
 .password-wrap{display:flex;gap:6px}
 #togglePass{border:none;background:#eee;border-radius:8px;padding:0 12px;cursor:pointer}
 header{background:#0f2027;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;color:#fff}
-header img{height:46px}
 main{max-width:1200px;margin:auto;padding:30px}
 .card{background:#fff;border-radius:22px;padding:26px;margin-bottom:26px;box-shadow:0 12px 30px rgba(0,0,0,.12)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-ul{padding-left:18px}
-li{font-size:14px}
-table{width:100%;border-collapse:collapse}
 th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}
 th{background:#203a43;color:#fff}
-@media(max-width:600px){header h2{font-size:16px}}
-
-/* Penambahan untuk tampilan form booking yang lebih menarik */
-.booking-form .form-group {
-  position: relative;
-  margin-bottom: 20px;
-}
-.booking-form .form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 600;
-  color: #333;
-}
-.booking-form .form-group input,
-.booking-form .form-group select {
-  width: 100%;
-  padding: 12px 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 16px;
-  transition: all 0.3s ease;
-  background: #f9f9f9;
-}
-.booking-form .form-group input:focus,
-.booking-form .form-group select:focus {
-  border-color: #1d2671;
-  box-shadow: 0 0 10px rgba(29, 38, 113, 0.2);
-  background: #fff;
-}
-.booking-form .form-group textarea {
-  width: 100%;
-  padding: 12px 15px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  font-size: 16px;
-  resize: vertical;
-  min-height: 80px;
-  transition: all 0.3s ease;
-  background: #f9f9f9;
-}
-.booking-form .form-group textarea:focus {
-  border-color: #1d2671;
-  box-shadow: 0 0 10px rgba(29, 38, 113, 0.2);
-  background: #fff;
-}
-.booking-form .btn-success {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  color: #fff;
-  padding: 12px 30px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-  border: none;
-}
-.booking-form .btn-success:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-}
-.booking-form .icon {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #ccc;
-  font-size: 18px;
-}
-.booking-form h3 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #1d2671;
-  font-size: 24px;
-  font-weight: 700;
-}
-.booking-form #msg {
-  text-align: center;
-  margin-top: 15px;
-  font-weight: 600;
-}
-
-/* Animasi kedip untuk notifikasi */
-@keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0; }
-  100% { opacity: 1; }
-}
-.blink {
-  animation: blink 1s infinite;
-}
 </style>
 </head>
 <body>
@@ -134,317 +38,137 @@ th{background:#203a43;color:#fff}
     <input id="password" type="password">
     <button id="togglePass" type="button">👁</button>
   </div>
-  <button id="loginBtn" class="btn btn-primary" style="width:100%">Login</button>
+  <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Login</button>
   <p id="loginMsg" style="color:red"></p>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none">
 <header>
-  <img src="logo-multi-group.jpg" alt="Logo">
   <h2>🚗 CAR REQUEST FORM</h2>
-  <div>
-    <span id="roleInfo"></span>
-    <button class="btn btn-danger" onclick="logout()">Logout</button>
-  </div>
+  <button class="btn btn-danger" onclick="logout()">Logout</button>
 </header>
 
 <main>
-  <!-- ADMIN MASTER DATA -->
-  <div class="card" id="adminPanel" style="display:none">
-    <h3>Master Data (Admin)</h3>
+  <div class="card">
+    <h3>Form Booking Mobil</h3>
     <div class="grid">
-      <div>
-        <label>Tambah Divisi</label>
-        <input id="divisiBaru" placeholder="Nama Divisi">
-        <button class="btn btn-success" onclick="addDivisi()">Tambah</button>
-        <ul id="listDivisi"></ul>
-      </div>
-      <div>
-        <label>Tambah Mobil</label>
-        <input id="mobilBaru" placeholder="Nama Mobil">
-        <button class="btn btn-success" onclick="addMobil()">Tambah</button>
-        <ul id="listMobil"></ul>
-      </div>
+      <input id="nama" placeholder="Nama Pemesan">
+      <input id="kode" placeholder="Kode Booking">
+      <input id="divisi" placeholder="Divisi">
+      <input id="mobil" placeholder="Mobil">
+      <input type="date" id="tglBooking">
+      <input type="date" id="tglPakai">
     </div>
-  </div>
-
-  <!-- FORM BOOKING -->
-  <div class="card booking-form">
-    <h3>🚗 Form Booking Mobil</h3>
-    <div class="grid">
-      <div class="form-group">
-        <label for="nama">👤 Nama Pemesan</label>
-        <input id="nama" placeholder="Masukkan nama lengkap">
-        <span class="icon">✏️</span>
-      </div>
-      <div class="form-group">
-        <label for="kode">🔢 Kode Booking</label>
-        <input id="kode" placeholder="Masukkan kode unik">
-        <span class="icon">🔑</span>
-      </div>
-      <div class="form-group">
-        <label for="divisi">🏢 Divisi</label>
-        <select id="divisi">
-          <option value="">Pilih Divisi</option>
-        </select>
-        <span class="icon">📂</span>
-      </div>
-      <div class="form-group">
-        <label for="mobil">🚙 Mobil</label>
-        <select id="mobil">
-          <option value="">Pilih Mobil</option>
-        </select>
-        <span class="icon">🚗</span>
-      </div>
-      <div class="form-group">
-        <label for="tglBooking">📅 Tanggal Booking</label>
-        <input type="date" id="tglBooking">
-        <span class="icon">📆</span>
-      </div>
-      <div class="form-group">
-        <label for="tglPakai">📅 Tanggal Pakai</label>
-        <input type="date" id="tglPakai">
-        <span class="icon">📆</span>
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="tujuan">🎯 Tujuan</label>
-      <textarea id="tujuan" placeholder="Jelaskan tujuan penggunaan mobil..."></textarea>
-      <span class="icon">📝</span>
-    </div>
-    <button class="btn btn-success" onclick="simpan()">Simpan Booking</button>
+    <textarea id="tujuan" placeholder="Tujuan"></textarea>
+    <button class="btn btn-success" onclick="simpan()">Simpan</button>
     <p id="msg"></p>
   </div>
 
-  <!-- DATA -->
   <div class="card">
-    <h3>Data Booking</h3>
-    <button id="exportBtn" class="btn btn-primary" onclick="exportExcel()">📊 Export to Excel</button>
-    <table id="table">
+    <h3>Data Booking (Realtime)</h3>
+    <table width="100%">
       <thead>
         <tr>
-          <th>Nama</th><th>Kode</th><th>Divisi</th><th>Mobil</th>
-          <th>Tgl Booking</th><th>Tgl Pakai</th><th>Tujuan</th>
+          <th>Nama</th>
+          <th>Kode</th>
+          <th>Divisi</th>
+          <th>Mobil</th>
+          <th>Tgl Pakai</th>
+          <th>Tujuan</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody id="tbody"></tbody>
     </table>
   </div>
 </main>
 </div>
 
-<script>
-// ===== KONFIG =====
-const users = [{u:'admin', p:'admin135', r:'Admin'}, {u:'user', p:'user135', r:'User'}];
+<script type="module">
+/* ================= FIREBASE ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-// ===== ELEMENT =====
-const loginBox = document.getElementById('loginBox');
-const appDiv = document.getElementById('app');
-const roleInfo = document.getElementById('roleInfo');
-const exportBtn = document.getElementById('exportBtn');
-const username = document.getElementById('username');
-const password = document.getElementById('password');
-const loginMsg = document.getElementById('loginMsg');
-const msg = document.getElementById('msg');
-const togglePass = document.getElementById('togglePass');
-const loginBtn = document.getElementById('loginBtn');
+const firebaseConfig = {
+  apiKey: "AIzaSyDkLSbuXI_XoQS_s4b0uVT_WfkLgRcQ058",
+  authDomain: "booking-mobil-multigroup.firebaseapp.com",
+  projectId: "booking-mobil-multigroup",
+  storageBucket: "booking-mobil-multigroup.firebasestorage.app",
+  messagingSenderId: "672379120256",
+  appId: "1:672379120256:web:8b22dd01247cc6beaa5465"
+};
 
-// Elemen form booking
-const nama = document.getElementById('nama');
-const kode = document.getElementById('kode');
-const divisi = document.getElementById('divisi');
-const mobil = document.getElementById('mobil');
-const tglBooking = document.getElementById('tglBooking');
-const tglPakai = document.getElementById('tglPakai');
-const tujuan = document.getElementById('tujuan');
+const appFirebase = initializeApp(firebaseConfig);
+const db = getFirestore(appFirebase);
+const auth = getAuth(appFirebase);
 
-// Elemen master data
-const divisiBaru = document.getElementById('divisiBaru');
-const mobilBaru = document.getElementById('mobilBaru');
-const listDivisi = document.getElementById('listDivisi');
-const listMobil = document.getElementById('listMobil');
+/* ================= LOGIN ================= */
+window.doLogin = async () => {
+  try{
+    await signInWithEmailAndPassword(auth, username.value + "@app.com", password.value);
+  }catch(e){ loginMsg.innerText = "Login gagal"; }
+}
 
-// Elemen table
-const tbody = document.querySelector('#table tbody');
+onAuthStateChanged(auth, user => {
+  if(user){
+    loginBox.style.display = 'none';
+    app.style.display = 'block';
+  }
+});
 
-let currentUser = null;
-let masterDivisi = JSON.parse(localStorage.getItem('divisi') || '[]');
-let masterMobil = JSON.parse(localStorage.getItem('mobil') || '[]');
-let bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+window.logout = async () => {
+  await signOut(auth);
+  location.reload();
+}
 
-// ===== LOGIN =====
-togglePass.onclick = () => {
+/* ================= BOOKING ================= */
+window.simpan = async () => {
+  if(!nama.value || !kode.value || !mobil.value || !tglPakai.value){
+    msg.innerText = "Lengkapi data";
+    msg.style.color = "red";
+    return;
+  }
+
+  await addDoc(collection(db, "bookings"), {
+    nama: nama.value,
+    kode: kode.value,
+    divisi: divisi.value,
+    mobil: mobil.value,
+    tglBooking: tglBooking.value,
+    tglPakai: tglPakai.value,
+    tujuan: tujuan.value,
+    createdAt: Date.now()
+  });
+
+  msg.innerText = "Tersimpan (Realtime)";
+  msg.style.color = "green";
+}
+
+/* ================= REALTIME TABLE ================= */
+const tbody = document.getElementById("tbody");
+const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
+
+onSnapshot(q, (snap) => {
+  tbody.innerHTML = "";
+  snap.forEach(doc => {
+    const b = doc.data();
+    tbody.innerHTML += `
+      <tr>
+        <td>${b.nama}</td>
+        <td>${b.kode}</td>
+        <td>${b.divisi}</td>
+        <td>${b.mobil}</td>
+        <td>${b.tglPakai}</td>
+        <td>${b.tujuan}</td>
+      </tr>`;
+  });
+});
+
+/* ================= UI ================= */
+document.getElementById('togglePass').onclick = () => {
   password.type = password.type === 'password' ? 'text' : 'password';
-};
-loginBtn.onclick = doLogin;
-
-username.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') doLogin();
-});
-password.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') doLogin();
-});
-
-function doLogin() {
-  const u = username.value.trim().toLowerCase();
-  const p = password.value.trim();
-  const f = users.find(x => x.u === u && x.p === p);
-  if (!f) { loginMsg.innerText = 'Login gagal'; return; }
-  currentUser = f;
-  sessionStorage.setItem('user', JSON.stringify(f));
-  loginBox.style.display = 'none';
-  appDiv.style.display = 'block';
-  roleInfo.innerText = 'Role: ' + f.r;
-  if (f.r !== 'Admin') {
-    exportBtn.style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'none';
-  } else {
-    document.getElementById('adminPanel').style.display = 'block';
-    loadMaster();
-  }
-  render();
 }
-
-(function autoLogin() {
-  const s = sessionStorage.getItem('user');
-  if (!s) return;
-  currentUser = JSON.parse(s);
-  loginBox.style.display = 'none';
-  appDiv.style.display = 'block';
-  roleInfo.innerText = 'Role: ' + currentUser.r;
-  if (currentUser.r !== 'Admin') {
-    exportBtn.style.display = 'none';
-    document.getElementById('adminPanel').style.display = 'none';
-  } else {
-    document.getElementById('adminPanel').style.display = 'block';
-    loadMaster();
-  }
-  render();
-})();
-
-// ===== LOGOUT =====
-window.logout = () => {
-  if (confirm('Apakah Anda yakin ingin logout?')) {
-    sessionStorage.removeItem('user');
-    currentUser = null;
-    appDiv.style.display = 'none';
-    loginBox.style.display = 'block';
-    username.value = '';
-    password.value = '';
-    loginMsg.innerText = '';
-  }
-};
-
-// ===== MASTER DATA (localStorage) =====
-function loadMaster() {
-  listDivisi.innerHTML = masterDivisi.map(d => `<li>${d}</li>`).join('');
-  listMobil.innerHTML = masterMobil.map(m => `<li>${m}</li>`).join('');
-}
-
-window.addDivisi = () => {
-  const val = divisiBaru.value.trim();
-  if (!val || masterDivisi.includes(val)) return;
-  masterDivisi.push(val);
-  localStorage.setItem('divisi', JSON.stringify(masterDivisi));
-  divisiBaru.value = '';
-  loadMaster();
-  render();
-};
-
-window.addMobil = () => {
-  const val = mobilBaru.value.trim();
-  if (!val || masterMobil.includes(val)) return;
-  masterMobil.push(val);
-  localStorage.setItem('mobil', JSON.stringify(masterMobil));
-  mobilBaru.value = '';
-  loadMaster();
-  render();
-};
-
-// ===== FORM FUNCTIONS =====
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const [year, month, day] = dateStr.split('-');
-  return `${day}-${month}-${year}`;
-}
-
-function render() {
-  divisi.innerHTML = '<option value="">Pilih Divisi</option>' + masterDivisi.map(d => `<option value="${d}">${d}</option>`).join('');
-  mobil.innerHTML = '<option value="">Pilih Mobil</option>' + masterMobil.map(m => `<option value="${m}">${m}</option>`).join('');
-  tbody.innerHTML = bookings.map(b => `
-    <tr>
-      <td>${b.nama}</td>
-      <td>${b.kode}</td>
-      <td>${b.divisi}</td>
-      <td>${b.mobil}</td>
-      <td>${formatDate(b.tglBooking)}</td>
-      <td>${formatDate(b.tglPakai)}</td>
-      <td>${b.tujuan}</td>
-    </tr>
-  `).join('');
-}
-
-// ===== BOOKING (localStorage) =====
-window.simpan = () => {
-  const namaVal = nama.value.trim();
-  const kodeVal = kode.value.trim();
-  const divisiVal = divisi.value;
-  const mobilVal = mobil.value;
-  const tglBookingVal = tglBooking.value;
-  const tglPakaiVal = tglPakai.value;
-  const tujuanVal = tujuan.value.trim();
-  if (!namaVal || !kodeVal || !divisiVal || !mobilVal || !tglBookingVal || !tglPakaiVal || !tujuanVal) {
-    msg.innerText = 'Semua field harus diisi!';
-    msg.style.color = 'red';
-    msg.classList.add('blink');
-    return;
-  }
-  // Cek konflik: mobil dan tglPakai sama
-  const conflict = bookings.find(b => b.mobil === mobilVal && b.tglPakai === tglPakaiVal);
-  if (conflict) {
-    msg.innerText = `Mobil pada tanggal ${formatDate(tglPakaiVal)} telah di booking!`;
-    msg.style.color = 'red';
-    msg.classList.add('blink');
-    return;
-  }
-  bookings.push({nama: namaVal, kode: kodeVal, divisi: divisiVal, mobil: mobilVal, tglBooking: tglBookingVal, tglPakai: tglPakaiVal, tujuan: tujuanVal});
-  localStorage.setItem('bookings', JSON.stringify(bookings));
-  msg.innerText = 'Booking berhasil disimpan!';
-  msg.style.color = 'green';
-  msg.classList.remove('blink');
-  // Reset form
-  nama.value = '';
-  kode.value = '';
-  divisi.selectedIndex = 0;
-  mobil.selectedIndex = 0;
-  tglBooking.value = '';
-  tglPakai.value = '';
-  tujuan.value = '';
-  render();
-};
-
-// ===== EXPORT =====
-window.exportExcel = () => {
-  if (currentUser.r !== 'Admin') return;
-  if (bookings.length === 0) {
-    alert('Tidak ada data untuk diekspor');
-    return;
-  }
-  const dataForExport = bookings.map(b => ({
-    Nama: b.nama,
-    Kode: b.kode,
-    Divisi: b.divisi,
-    Mobil: b.mobil,
-    'Tgl Booking': formatDate(b.tglBooking),
-    'Tgl Pakai': formatDate(b.tglPakai),
-    Tujuan: b.tujuan
-  }));
-  const ws = XLSX.utils.json_to_sheet(dataForExport);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
-  XLSX.writeFile(wb, 'bookings.xlsx');
-};
 </script>
 </body>
 </html>
